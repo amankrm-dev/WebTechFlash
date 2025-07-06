@@ -1,30 +1,54 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
-$conn = new mysqli("localhost", "root", "", "userdb");
 
-// Check connection
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+$host = "localhost";
+$user = "root";
+$pass = "";
+$dbname = "userdb";
+
+// Create connection
+$conn = mysqli_connect($host, $user, $pass, $dbname);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $username = $_POST['username'];
-  $password = $_POST['password'];
+$message = "";
 
-  // Using prepared statements to prevent SQL injection
-  $stmt = $conn->prepare("SELECT id FROM users WHERE username=? AND password=?");
-  $stmt->bind_param("ss", $username, $password);
-  $stmt->execute();
-  $stmt->store_result();
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
 
-  if ($stmt->num_rows > 0) {
-    $_SESSION['username'] = $username;
-    echo "Login successful. Welcome, $username!";
-    // Redirect to dashboard or home
-  } else {
-    echo "Invalid username or password.";
-  }
-  $stmt->close();
+    // Simple query (unsafe for production, but fine for lab)
+    $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
+    $result = mysqli_query($conn, $sql);
+
+    if ($result && mysqli_num_rows($result) == 1) {
+        $_SESSION['username'] = $username;
+        $message = "Login successful! Welcome " . htmlspecialchars($username);
+    } else {
+        $message = "Invalid username or password";
+    }
 }
-$conn->close();
+
+mysqli_close($conn);
 ?>
+
+<!DOCTYPE html>
+<html>
+<head><title>Login</title></head>
+<body>
+
+<h2>User Login</h2>
+
+<?php if ($message) { echo "<p>$message</p>"; } ?>
+
+<form method="POST" action="">
+    Username: <input type="text" name="username" required><br><br>
+    Password: <input type="password" name="password" required><br><br>
+    <input type="submit" value="Login">
+</form>
+
+</body>
+</html>

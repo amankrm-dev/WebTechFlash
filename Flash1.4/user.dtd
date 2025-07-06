@@ -1,0 +1,5 @@
+<!ELEMENT userinfo (Name, Age, Address, Email)>
+<!ELEMENT Name (#PCDATA)>
+<!ELEMENT Age (#PCDATA)>
+<!ELEMENT Address (#PCDATA)>
+<!ELEMENT Email (#PCDATA)>
